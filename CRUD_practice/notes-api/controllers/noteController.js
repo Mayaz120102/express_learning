@@ -1,10 +1,18 @@
-let notes = [
-  { id: 1, title: "first note" },
-  { id: 2, title: "second note" },
-];
+const noteService = require("../services/noteService");
 
-const getAllNotes = (req, res) => {
+const getNotes = (req, res) => {
+  const notes = noteService.getAllNotes();
   res.json(notes);
+};
+
+const getNote = (req, res) => {
+  const Id = parseInt(req.params.id);
+
+  const note = noteService.getNoteById(id);
+  if (!note) {
+    return res.status(404).json({ message: "note not found" });
+  }
+  res.json(note);
 };
 
 const createNote = (req, res) => {
@@ -14,34 +22,19 @@ const createNote = (req, res) => {
       .status(400)
       .json({ error: "title is required and must be a string" });
   }
-  const newNote = {
-    id: notes.length + 1,
-    title: req.body.title,
-  };
-  notes.push(newNote);
-  res.json(newNote);
-};
+  const newNote = noteService.createNote(title);
 
-const getNoteById = (req, res) => {
-  const noteId = parseInt(req.params.id);
-
-  const note = notes.find((note) => note.id == noteId);
-  if (!note) {
-    return res.status(404).json({
-      message: "note not found",
-    });
-  }
-  res.json(note);
+  res.status(201).json(newNote);
 };
 
 const updateNote = (req, res) => {
-  const noteId = parseInt(req.params.id);
+  const id = parseInt(req.params.id);
 
   const { title } = req.body;
 
-  const note = notes.find((note) => note.id == noteId);
+  const updateNote = noteService.updateNote(id, title);
 
-  if (!note) {
+  if (!updateNote) {
     return res.status(404).json({
       message: "note not found",
     });
@@ -51,35 +44,31 @@ const updateNote = (req, res) => {
       message: "title is required and must be a string",
     });
   }
-  note.title = title;
-  res.json(note);
+  res.json(updateNote);
 };
 
 const deleteNote = (req, res) => {
-  const noteId = parseInt(req.params.id);
-  console.log(notes);
-  console.log("param id:", noteId, typeof noteId);
+  const id = parseInt(req.params.id);
+  // console.log(notes);
+  // console.log("param id:", noteId, typeof noteId);
 
-  notes.forEach((n) => {
-    console.log("note id:", n.id, typeof n.id);
-  });
-  const noteIndex = notes.findIndex((note) => note.id == noteId);
+  // notes.forEach((n) => {
+  //   console.log("note id:", n.id, typeof n.id);
+  // });
 
-  if (noteIndex === -1) {
-    return res.status(404).json({
-      message: "note not found",
-    });
+  const isDeleted = noteService.deleteNote(id);
+
+  if (!isDeleted) {
+    return res.status(404).json({ message: "note not found" });
   }
-  notes.splice(noteIndex, 1);
-  res.json({
-    message: "note deleted successfully",
-  });
+
+  res.json({ message: "note deleted succesfully" });
 };
 
 module.exports = {
-  getAllNotes,
+  getNotes,
+  getNote,
   createNote,
-  getNoteById,
   updateNote,
   deleteNote,
 };
