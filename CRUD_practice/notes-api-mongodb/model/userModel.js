@@ -1,4 +1,3 @@
-const { Timestamp } = require("mongodb");
 const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema(
@@ -15,6 +14,9 @@ const userSchema = mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    refreshToken: {
+      type: String,
     },
   },
   {

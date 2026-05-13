@@ -11,19 +11,22 @@ const {
   updateNote,
 } = require("../controllers/noteController");
 
+//protect middleware to all routes
+router.use(protect);
+
 //get all notes
 
-router.get("/", protect, getAllNotes);
+router.get("/", getAllNotes);
 
 //get one
-router.get("/:id", protect, getSingleNote);
+router.get("/:id", getSingleNote);
 //post /notes
 
-router.post("/", protect, createNote);
+router.post("/", createNote);
 
 //delelte
-router.delete("/:id", protect, deleteNote);
+router.delete("/:id", deleteNote);
 
-router.put("/:id", protect, updateNote);
+router.put("/:id", updateNote);
 
 module.exports = router;
