@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const { protect } = require("../middleware/authMiddleware");
+
 const {
   createNote,
   getAllNotes,
@@ -11,17 +13,17 @@ const {
 
 //get all notes
 
-router.get("/", getAllNotes);
+router.get("/", protect, getAllNotes);
 
 //get one
-router.get("/:id", getSingleNote);
+router.get("/:id", protect, getSingleNote);
 //post /notes
 
-router.post("/", createNote);
+router.post("/", protect, createNote);
 
 //delelte
-router.delete("/:id", deleteNote);
+router.delete("/:id", protect, deleteNote);
 
-router.put("/:id", updateNote);
+router.put("/:id", protect, updateNote);
 
 module.exports = router;
