@@ -2,10 +2,13 @@ const errorHandler = require("./middleware/errorMiddleware");
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const cors = require("cors");
 
 dotenv.config(); //laod env
 
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -17,7 +20,7 @@ const noteRoutes = require("./routes/noteRouters");
 const userRoutes = require("./routes/userRoutes");
 
 //router middleware
-app.use("/notes", noteRoutes);
+app.use("/api/notes", noteRoutes);
 app.use("/api/users/", userRoutes);
 
 app.get("/", (req, res) => {

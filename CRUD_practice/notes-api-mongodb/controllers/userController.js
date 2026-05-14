@@ -89,9 +89,11 @@ const loginUser = asyncHandler(async (req, res) => {
   await user.save();
 
   res.status(200).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+    },
     accessToken,
     refreshToken,
   });
