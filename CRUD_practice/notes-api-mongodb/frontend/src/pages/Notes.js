@@ -8,7 +8,7 @@ const Notes = () => {
   const [editTitle, setEditTitle] = useState("");
 
   // NEW
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   //get all notes
   useEffect(() => {
@@ -57,7 +57,9 @@ const Notes = () => {
       });
 
       //update ui
-      const updateNotes = notes.map((note) => (note._id ? res.data : note));
+      const updateNotes = notes.map((note) =>
+        note._id === id ? res.data : note,
+      );
 
       setNotes(updateNotes);
       setEditId(null);

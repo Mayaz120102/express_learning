@@ -19,7 +19,6 @@ const Login = () => {
       //store token
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
 
       //redict user
       window.location.href = "/notes";
