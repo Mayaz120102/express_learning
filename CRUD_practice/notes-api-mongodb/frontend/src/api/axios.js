@@ -3,8 +3,8 @@ import axios from "axios";
 //create axios instance
 const API = axios.create({
   baseURL: "http://localhost:5000/api",
+  withCredentials: true,
 });
-
 
 //adding interceptor
 API.interceptors.request.use(
@@ -35,12 +35,11 @@ API.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-
         //call refresh api
         const res = await axios.post(
           "http://localhost:5000/api/users/refresh-token",
-          { refreshToken },
+          {},
+          { withCredentials: true },
         );
 
         const newAccessToken = res.data.accessToken;
