@@ -11,6 +11,7 @@ dotenv.config(); //laod env
 
 const app = express();
 
+// allowed frontend URLs
 const allowedOrigins = [process.env.CLIENT_URL];
 
 app.use(
@@ -28,6 +29,7 @@ app.use(
   }),
 );
 
+// security headers
 app.use(helmet());
 
 //body parser
@@ -43,18 +45,22 @@ connectDB();
 const noteRoutes = require("./routes/noteRouters");
 const userRoutes = require("./routes/userRoutes");
 
+//rate limiter
 app.use("/api", apiLimiter);
 
-//router middleware
+//router middleware /api routes
 app.use("/api/notes", noteRoutes);
 app.use("/api/users/", userRoutes);
 
+//test route
 app.get("/", (req, res) => {
   res.send("API is Running...");
 });
 
+//error middleware
 app.use(errorHandler);
 
+//server
 app.listen(process.env.PORT, () => {
   console.log(`server running on port ${process.env.PORT}`);
 });

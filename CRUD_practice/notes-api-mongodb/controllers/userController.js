@@ -21,8 +21,10 @@ const generateRefreshToken = (id) => {
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  // secure: process.env.NODE_ENV === "production",
+  secure: false, // for localhost
+  sameSite: "lax", // IMPORTANT FIX
+  // sameSite: "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
