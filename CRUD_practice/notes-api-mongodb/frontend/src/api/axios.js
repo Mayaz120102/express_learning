@@ -2,7 +2,7 @@ import axios from "axios";
 
 //create axios instance
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.REACT_APP_API_URL,
   withCredentials: true,
 });
 
@@ -37,7 +37,7 @@ API.interceptors.response.use(
       try {
         //call refresh api
         const res = await axios.post(
-          "http://localhost:5000/api/users/refresh-token",
+          `${process.env.REACT_APP_API_URL}/users/refresh-token`,
           {},
           { withCredentials: true },
         );
