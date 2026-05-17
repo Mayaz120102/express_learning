@@ -97,7 +97,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    res.status(400);
+    res.status(401);
     throw new Error("Invalid credentials");
   }
 
@@ -160,10 +160,15 @@ const refreshUserToken = asyncHandler(async (req, res) => {
     // send access token
     res.status(200).json({
       accessToken: newAccessToken,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
     res.status(401);
-    throw new Error("Invalid refresh token");
+    throw new Error(error.message || "Invalid refresh token");
   }
 });
 
@@ -181,9 +186,14 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 
   // clear cookie
-  res.clearCookie("refreshToken", cookieOptions);
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  });
 
   res.status(200).json({
+    success: true,
     message: "Logged out successfully",
   });
 });

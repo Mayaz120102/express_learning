@@ -69,11 +69,16 @@ const Notes = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user"); // optional
-    window.location.href = "/";
+  const handleLogout = async () => {
+    try {
+      await API.post("/users/logout");
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user"); // optional
+      window.location.href = "/";
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

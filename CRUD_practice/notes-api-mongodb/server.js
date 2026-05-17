@@ -4,17 +4,31 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { apiLimiter } = require("./middleware/rateLimiter");
+const helmet = require("helmet");
 
 dotenv.config(); //laod env
 
 const app = express();
 
+const allowedOrigins = [process.env.CLIENT_URL];
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
+
+app.use(helmet());
 
 //body parser
 app.use(express.json());
@@ -28,6 +42,8 @@ connectDB();
 //routse importt
 const noteRoutes = require("./routes/noteRouters");
 const userRoutes = require("./routes/userRoutes");
+
+app.use("/api", apiLimiter);
 
 //router middleware
 app.use("/api/notes", noteRoutes);
