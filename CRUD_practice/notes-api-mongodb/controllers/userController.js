@@ -22,8 +22,8 @@ const generateRefreshToken = (id) => {
 const cookieOptions = {
   httpOnly: true,
   // secure: process.env.NODE_ENV === "production",
-  secure: false, // for localhost
-  sameSite: "lax", // IMPORTANT FIX
+  secure: true, // for localhost
+  sameSite: "none", // IMPORTANT FIX
   // sameSite: "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -190,8 +190,9 @@ const logoutUser = asyncHandler(async (req, res) => {
   // clear cookie
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    sameSite: "strict",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    // secure: process.env.NODE_ENV === "production",
+    secure: true,
   });
 
   res.status(200).json({
