@@ -12,7 +12,7 @@ dotenv.config(); //laod env
 const app = express();
 
 // allowed frontend URLs
-const allowedOrigins = [process.env.CLIENT_URL];
+const allowedOrigins = [process.env.CLIENT_URL, "http://localhost:3000"];
 
 app.use(
   cors({
