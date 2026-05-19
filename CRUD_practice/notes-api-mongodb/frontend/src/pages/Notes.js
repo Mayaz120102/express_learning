@@ -13,6 +13,7 @@ const Notes = () => {
   const [updatingId, setUpdatingId] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
   // const limit = 5;
 
   // NEW
@@ -20,7 +21,7 @@ const Notes = () => {
 
   //get all notes
   useEffect(() => {
-    API.get(`/notes?page=${page}&limit=5`)
+    API.get(`/notes?page=${page}&limit=5&search=${search}`)
       .then((res) => {
         console.log("Full res.data:", res.data); // 👈
         console.log("notes array:", res.data.notes); // 👈
@@ -28,7 +29,7 @@ const Notes = () => {
         setTotalPages(res.data.totalPages);
       })
       .catch((err) => console.log(err));
-  }, [page]);
+  }, [page, search]);
 
   //create note
   const handleAddNote = async () => {
@@ -145,6 +146,15 @@ const Notes = () => {
             {loading ? "Adding..." : "Add Note"}
           </button>
         </div>
+
+        {/* search button */}
+        <input
+          type="text"
+          placeholder="🔍 Search notes..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-md px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm text-sm outline-none transition focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
 
         {/* note list */}
         {notes.length === 0 ? (
