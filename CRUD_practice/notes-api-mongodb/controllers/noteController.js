@@ -21,15 +21,25 @@ const getAllNotes = asyncHandler(async (req, res) => {
   //get query values
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
+  const search = req.query.search || "";
 
   //calculate skip
   const skip = (page - 1) * limit;
 
+  //serch filter
+  const query = {
+    user: userId,
+  };
+
+  if (search) {
+    query.title = { $regex: search, $options: "i" };
+  }
+
   //fetch notes
-  const notes = await Note.find({ user: userId }).skip(skip).limit(limit);
+  const notes = await Note.find(query).skip(skip).limit(limit);
 
   //get total count
-  const totalNotes = await Note.countDocuments({ user: userId });
+  const totalNotes = await Note.countDocuments(query);
   res.status(200).json({
     notes,
     page,
