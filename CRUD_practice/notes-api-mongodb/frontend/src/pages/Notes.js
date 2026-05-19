@@ -11,19 +11,24 @@ const Notes = () => {
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  // const limit = 5;
 
   // NEW
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   //get all notes
   useEffect(() => {
-    API.get("/notes")
+    API.get(`/notes?page=${page}&limit=5`)
       .then((res) => {
-        console.log("Notes:", res.data);
-        setNotes(res.data);
+        console.log("Full res.data:", res.data); // 👈
+        console.log("notes array:", res.data.notes); // 👈
+        setNotes(res.data.notes || []);
+        setTotalPages(res.data.totalPages);
       })
       .catch((err) => console.log(err));
-  }, []);
+  }, [page]);
 
   //create note
   const handleAddNote = async () => {
@@ -196,6 +201,27 @@ const Notes = () => {
             ))}
           </ul>
         )}
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <span className="font-bold">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === totalPages}
+            className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </>
   );

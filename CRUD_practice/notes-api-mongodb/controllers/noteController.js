@@ -16,8 +16,26 @@ const createNote = asyncHandler(async (req, res) => {
 });
 
 const getAllNotes = asyncHandler(async (req, res) => {
-  const notes = await Note.find({ user: req.user._id });
-  res.status(200).json(notes);
+  const userId = req.user._id;
+
+  //get query values
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+
+  //calculate skip
+  const skip = (page - 1) * limit;
+
+  //fetch notes
+  const notes = await Note.find({ user: userId }).skip(skip).limit(limit);
+
+  //get total count
+  const totalNotes = await Note.countDocuments({ user: userId });
+  res.status(200).json({
+    notes,
+    page,
+    totalPages: Math.ceil(totalNotes / limit),
+    totalNotes,
+  });
 });
 
 const getSingleNote = asyncHandler(async (req, res) => {
