@@ -8,58 +8,71 @@ const Notes = () => {
   const [title, setTitle] = useState("");
   const [editId, setEditId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false); // ⭐ NEW
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("desc"); //default
-  // const limit = 5;
 
-  // NEW
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(""); // ⭐ NEW
+  const [sort, setSort] = useState("desc");
+
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  //adding fetchnote function
+  // ✅ DEBOUNCE SEARCH
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // ✅ RESET PAGE WHEN SEARCH OR SORT CHANGES
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sort]);
+
+  // ✅ FETCH NOTES (SINGLE SOURCE OF TRUTH)
   const fetchNotes = async () => {
     try {
-      const res = await API.get(
-        `/notes?page=${page}&limit=5&sort=${sort}&search=${search}`,
-      );
+      setFetchLoading(true);
 
-      console.log("Full res.data:", res.data);
-      console.log("notes array:", res.data.notes);
+      const res = await API.get(
+        `/notes?page=${page}&limit=5&sort=${sort}&search=${debouncedSearch}`,
+      );
 
       setNotes(res.data.notes || []);
       setTotalPages(res.data.totalPages);
     } catch (err) {
       console.log(err);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
-  //get all notes
+  // ✅ TRIGGER FETCH
   useEffect(() => {
     fetchNotes();
-  }, [page, sort, search]);
+  }, [page, sort, debouncedSearch]);
 
-  
-
-  //create note
+  // ✅ ADD NOTE (SYNC WITH BACKEND)
   const handleAddNote = async () => {
-    if (!title) return toast.error("Title required");
+    if (!title.trim()) return toast.error("Title required");
 
     setLoading(true);
 
     try {
-      const res = await API.post("/notes", { title });
-      console.log("Created:", res.data);
+      await API.post("/notes", { title: title.trim() });
 
-      //instant ui update
-      setNotes([...notes, res.data]);
-
-      setTitle(""); //clear input
-
+      setTitle("");
       toast.success("Note added Successfully");
+
+      await fetchNotes(); // ⭐ IMPORTANT (sync pagination)
     } catch (err) {
       console.log(err);
       toast.error("Failed to add note");
@@ -68,24 +81,25 @@ const Notes = () => {
     }
   };
 
-  //deletenote
+  // ✅ DELETE NOTE
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this note?",
     );
-
     if (!confirmDelete) return;
+
     setDeletingId(id);
 
     try {
       await API.delete(`/notes/${id}`);
-
-      console.log("deleted");
-
-      //update ui
-
-      setNotes(notes.filter((note) => note._id !== id));
       toast.success("Note deleted successfully!");
+
+      // ⭐ handle empty page case
+      if (notes.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await fetchNotes();
+      }
     } catch (err) {
       console.log(err);
       toast.error("Failed to delete note");
@@ -94,26 +108,23 @@ const Notes = () => {
     }
   };
 
-  //update note
+  // ✅ UPDATE NOTE
   const handleUpdate = async (id) => {
-    if (!editTitle) return toast.error("Title required");
+    if (!editTitle.trim()) return toast.error("Title required");
 
     setUpdatingId(id);
 
     try {
-      const res = await API.put(`/notes/${id}`, {
-        title: editTitle,
+      await API.put(`/notes/${id}`, {
+        title: editTitle.trim(),
       });
 
-      //update ui
-      const updateNotes = notes.map((note) =>
-        note._id === id ? res.data : note,
-      );
-
-      setNotes(updateNotes);
       setEditId(null);
       setEditTitle("");
+
       toast.success("Note updated successfully!");
+
+      await fetchNotes(); // ⭐ sync
     } catch (err) {
       console.log(err);
       toast.error("Failed to update note");
@@ -127,7 +138,7 @@ const Notes = () => {
       await API.post("/users/logout");
 
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("user"); // optional
+      localStorage.removeItem("user");
       window.location.href = "/";
     } catch (error) {
       console.log(error);
@@ -141,7 +152,7 @@ const Notes = () => {
       <div className="max-w-4xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">{user?.name} Notes</h1>
 
-        {/* input */}
+        {/* ADD NOTE */}
         <div className="flex gap-2 mb-6">
           <input
             type="text"
@@ -160,35 +171,32 @@ const Notes = () => {
           </button>
         </div>
 
-        {/* search button */}
+        {/* SEARCH */}
         <input
           type="text"
           placeholder="🔍 Search notes..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-md px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm text-sm outline-none transition focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
 
+        {/* SORT */}
         <div className="flex justify-end mb-4">
           <select
             value={sort}
-            onChange={(e) => {
-              setSort(e.target.value);
-              setPage(1);
-            }}
-            className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none "
+            onChange={(e) => setSort(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="desc">Newest First</option>
             <option value="asc">Oldest First</option>
           </select>
         </div>
 
-        {/* note list */}
-        {notes.length === 0 ? (
-          <p className="text-center text-gray-500">No notes found, add one</p>
+        {/* NOTES */}
+        {fetchLoading ? (
+          <p className="text-center text-gray-500">Loading...</p>
+        ) : notes.length === 0 ? (
+          <p className="text-center text-gray-500">No notes found</p>
         ) : (
           <ul className="space-y-3">
             {notes.map((note) => (
@@ -241,10 +249,12 @@ const Notes = () => {
             ))}
           </ul>
         )}
+
+        {/* PAGINATION */}
         <div className="flex justify-center gap-4 mt-6">
           <button
             onClick={() => setPage(page - 1)}
-            disabled={page === 1}
+            disabled={page === 1 || fetchLoading}
             className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
           >
             Prev
@@ -256,7 +266,7 @@ const Notes = () => {
 
           <button
             onClick={() => setPage(page + 1)}
-            disabled={page === totalPages}
+            disabled={page === totalPages || fetchLoading}
             className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
           >
             Next
