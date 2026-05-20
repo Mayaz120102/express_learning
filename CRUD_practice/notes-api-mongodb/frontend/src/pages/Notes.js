@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import { toast } from "react-toastify";
@@ -38,7 +38,7 @@ const Notes = () => {
   }, [debouncedSearch, sort]);
 
   // ✅ FETCH NOTES (SINGLE SOURCE OF TRUTH)
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       setFetchLoading(true);
 
@@ -53,12 +53,12 @@ const Notes = () => {
     } finally {
       setFetchLoading(false);
     }
-  };
+  }, [page, sort, debouncedSearch]);
 
   // ✅ TRIGGER FETCH
   useEffect(() => {
     fetchNotes();
-  }, [page, sort, debouncedSearch]);
+  }, [fetchNotes]);
 
   // ✅ ADD NOTE (SYNC WITH BACKEND)
   const handleAddNote = async () => {
