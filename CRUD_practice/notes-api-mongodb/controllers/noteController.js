@@ -22,6 +22,7 @@ const getAllNotes = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const search = req.query.search || "";
+  const sort = req.query.sort || "desc";
 
   //calculate skip
   const skip = (page - 1) * limit;
@@ -36,10 +37,14 @@ const getAllNotes = asyncHandler(async (req, res) => {
   }
 
   //fetch notes
-  const notes = await Note.find(query).skip(skip).limit(limit);
+  const notes = await Note.find(query)
+    .sort({ createdAt: sort === "asc" ? 1 : -1 })
+    .skip(skip)
+    .limit(limit);
 
   //get total count
   const totalNotes = await Note.countDocuments(query);
+
   res.status(200).json({
     notes,
     page,

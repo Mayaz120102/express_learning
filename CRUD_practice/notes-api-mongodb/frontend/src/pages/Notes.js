@@ -14,22 +14,35 @@ const Notes = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("desc"); //default
   // const limit = 5;
 
   // NEW
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
+  //adding fetchnote function
+  const fetchNotes = async () => {
+    try {
+      const res = await API.get(
+        `/notes?page=${page}&limit=5&sort=${sort}&search=${search}`,
+      );
+
+      console.log("Full res.data:", res.data);
+      console.log("notes array:", res.data.notes);
+
+      setNotes(res.data.notes || []);
+      setTotalPages(res.data.totalPages);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   //get all notes
   useEffect(() => {
-    API.get(`/notes?page=${page}&limit=5&search=${search}`)
-      .then((res) => {
-        console.log("Full res.data:", res.data); // 👈
-        console.log("notes array:", res.data.notes); // 👈
-        setNotes(res.data.notes || []);
-        setTotalPages(res.data.totalPages);
-      })
-      .catch((err) => console.log(err));
-  }, [page, search]);
+    fetchNotes();
+  }, [page, sort, search]);
+
+  
 
   //create note
   const handleAddNote = async () => {
@@ -152,9 +165,26 @@ const Notes = () => {
           type="text"
           placeholder="🔍 Search notes..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="w-full max-w-md px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm text-sm outline-none transition focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
+
+        <div className="flex justify-end mb-4">
+          <select
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none "
+          >
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
 
         {/* note list */}
         {notes.length === 0 ? (
