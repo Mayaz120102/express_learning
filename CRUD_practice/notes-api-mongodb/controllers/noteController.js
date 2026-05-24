@@ -27,26 +27,59 @@ const getAllNotes = asyncHandler(async (req, res) => {
   //filtering
   const from = req.query.from;
   const to = req.query.to;
+  const date = req.query.date;
 
-  //calculate skip
-  const skip = (page - 1) * limit;
+  //convert to Date
+  const fromDate = from ? new Date(from) : null;
+  const toDate = to ? new Date(to) : null;
+  const singleDate = date ? new Date(date) : null;
 
-  //serch filter
+  //validation first
+  if (from && isNaN(fromDate.getTime())) {
+    res.status(400);
+    throw new Error("Invalid 'from' date");
+  }
+
+  if (to && isNaN(toDate.getTime())) {
+    res.status(400);
+    throw new Error("Invalid 'to' date");
+  }
+
+  if (date && isNaN(singleDate.getTime())) {
+    res.status(400);
+    throw new Error("Invalid 'date' ");
+  }
+
+  //defin query
   const query = {
     user: userId,
   };
 
+  //search
   if (search) {
     query.title = { $regex: search, $options: "i" };
   }
 
-  if (from || to) {
-    query.createdAt = {
-      ...(from && { $gte: new Date(from) }),
-      ...(to && { $lte: new Date(to) }),
-    };
+  if (singleDate) {
+    const start = new Date(singleDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(singleDate);
+    end.setHours(23, 59, 59, 999);
+
+    query.createdAt = { $gte: start, $lte: end };
   }
 
+  
+  if (!singleDate && (fromDate || toDate)) {
+    query.createdAt = {
+      ...(fromDate && { $gte: fromDate }),
+      ...(toDate && { $lte: toDate }),
+    };
+  }
+  
+  //calculate skip
+  const skip = (page - 1) * limit;
   //fetch notes
   const notes = await Note.find(query)
     .sort({ createdAt: sort === "asc" ? 1 : -1 })
