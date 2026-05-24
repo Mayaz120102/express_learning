@@ -24,6 +24,10 @@ const getAllNotes = asyncHandler(async (req, res) => {
   const search = req.query.search || "";
   const sort = req.query.sort || "desc";
 
+  //filtering
+  const from = req.query.from;
+  const to = req.query.to;
+
   //calculate skip
   const skip = (page - 1) * limit;
 
@@ -34,6 +38,13 @@ const getAllNotes = asyncHandler(async (req, res) => {
 
   if (search) {
     query.title = { $regex: search, $options: "i" };
+  }
+
+  if (from || to) {
+    query.createdAt = {
+      ...(from && { $gte: new Date(from) }),
+      ...(to && { $lte: new Date(to) }),
+    };
   }
 
   //fetch notes
