@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { GoruAuthContext } from "../context/GoruAuthContext";
 
-const useGoruAuth = () => {
+const userGoruAuth = () => {
   const context = useContext(GoruAuthContext);
 
   if (!context) {
@@ -11,4 +11,4 @@ const useGoruAuth = () => {
   return context;
 };
 
-export default useGoruAuth;
+export default userGoruAuth;

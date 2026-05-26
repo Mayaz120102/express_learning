@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectGoruDB from "./src/config/goruDB.js";
+import goruAuthRoutes from "./src/routes/goruAuthRoutes.js";
+import goruCowRoutes from "./src/routes/goruCowRoutes.js";
 
 dotenv.config();
 
@@ -16,6 +18,9 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use("/api/auth", goruAuthRoutes);
+app.use("/api/cows", goruCowRoutes);
 
 //test
 app.get("/api/heath", (req, res) => {
