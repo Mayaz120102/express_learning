@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import connectGoruDB from "./src/config/goruDB.js";
 import goruAuthRoutes from "./src/routes/goruAuthRoutes.js";
 import goruCowRoutes from "./src/routes/goruCowRoutes.js";
+import goruUploadRoutes from "./src/routes/goruUploadRoutes.js";
+import goruOrderRoutes from "./src/routes/goruOrderRoutes.js";
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ app.use(express.json());
 
 app.use("/api/auth", goruAuthRoutes);
 app.use("/api/cows", goruCowRoutes);
+app.use("/api/upload", goruUploadRoutes);
+app.use("/api/orders", goruOrderRoutes);
 
 //test
 app.get("/api/heath", (req, res) => {

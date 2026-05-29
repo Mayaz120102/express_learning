@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import goruAxios from "../api/goruAxios";
+import GoruImageUpload from "../components/GoruImageUpload";
 
 const GoruEditCow = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const GoruEditCow = () => {
     price: "",
     district: "",
     description: "",
+    images: [],
   });
 
   // Load existing cow data into the form
@@ -32,6 +34,7 @@ const GoruEditCow = () => {
           price: c.price,
           district: c.district,
           description: c.description || "",
+          images: c.images || [],
         });
       } catch {
         setError("Failed to load cow data");
@@ -39,6 +42,10 @@ const GoruEditCow = () => {
     };
     fetchCow();
   }, [id]);
+
+  const handleImagesUploaded = (urls) => {
+    setFormData((prev) => ({ ...prev, images: urls }));
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -168,6 +175,10 @@ const GoruEditCow = () => {
             className={inputClass}
           />
         </div>
+        <GoruImageUpload
+          onUploadComplete={handleImagesUploaded}
+          existingImages={formData.images}
+        />
 
         <div className="flex gap-4 pt-2">
           <button

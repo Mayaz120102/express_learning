@@ -36,6 +36,7 @@ const GoruNavbar = () => {
               <span className="text-green-200 text-sm">
                 👤 {goruUser?.name}
               </span>
+
               {goruUser?.role === "seller" && (
                 <Link
                   to="/dashboard"
@@ -44,6 +45,16 @@ const GoruNavbar = () => {
                   Dashboard
                 </Link>
               )}
+
+              {goruUser?.role === "buyer" && (
+                <Link
+                  to="/my-orders"
+                  className="hover:text-green-200 transition"
+                >
+                  My Orders
+                </Link>
+              )}
+
               <button
                 onClick={handleLogout}
                 className="bg-white text-green-700 px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-green-100 transition"

@@ -12,12 +12,23 @@ const GoruCowDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Order form state
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderData, setOrderData] = useState({
+    district: "",
+    details: "",
+    note: "",
+  });
+  const [ordering, setOrdering] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState("");
+
   useEffect(() => {
     const fetchCow = async () => {
       try {
         const { data } = await goruAxios.get(`/cows/${id}`);
         setCow(data.cow);
-      } catch (err) {
+      } catch {
         setError("Cow not found");
       } finally {
         setLoading(false);
@@ -27,14 +38,35 @@ const GoruCowDetail = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this listing?"))
-      return;
-
+    if (!window.confirm("Delete this listing?")) return;
     try {
       await goruAxios.delete(`/cows/${id}`);
       navigate("/cows");
     } catch (err) {
       alert(err.response?.data?.message || "Delete failed");
+    }
+  };
+
+  const handleOrder = async (e) => {
+    e.preventDefault();
+    setOrdering(true);
+    setOrderError("");
+
+    try {
+      await goruAxios.post("/orders", {
+        cowId: id,
+        deliveryAddress: {
+          district: orderData.district,
+          details: orderData.details,
+        },
+        note: orderData.note,
+      });
+      setOrderSuccess(true);
+      setShowOrderForm(false);
+    } catch (err) {
+      setOrderError(err.response?.data?.message || "Order failed");
+    } finally {
+      setOrdering(false);
     }
   };
 
@@ -49,6 +81,7 @@ const GoruCowDetail = () => {
     return <div className="text-center py-20 text-red-500">{error}</div>;
 
   const isOwner = goruUser?._id === cow?.seller?._id;
+  const isBuyer = goruUser?.role === "buyer";
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -105,7 +138,7 @@ const GoruCowDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          {/* Price card */}
+          {/* Price */}
           <div className="bg-green-700 text-white rounded-2xl p-6 text-center">
             <p className="text-green-200 text-sm mb-1">Price</p>
             <p className="text-4xl font-bold">৳{cow.price?.toLocaleString()}</p>
@@ -121,7 +154,7 @@ const GoruCowDetail = () => {
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Owner actions */}
           {isOwner && (
             <div className="space-y-2">
               <button
@@ -139,13 +172,108 @@ const GoruCowDetail = () => {
             </div>
           )}
 
-          {!isOwner && isAuthenticated && (
-            <button className="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 transition font-semibold">
-              Contact Seller
+          {/* Order success */}
+          {orderSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm text-center">
+              ✅ Order placed! Check your orders page.
+            </div>
+          )}
+
+          {/* Buyer actions */}
+          {isBuyer && cow.isAvailable && !orderSuccess && (
+            <button
+              onClick={() => setShowOrderForm(!showOrderForm)}
+              className="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 transition font-semibold"
+            >
+              {showOrderForm ? "Cancel" : "Place Order"}
             </button>
+          )}
+
+          {!cow.isAvailable && (
+            <div className="bg-gray-100 text-gray-500 rounded-xl p-4 text-center text-sm font-medium">
+              This cow has been sold
+            </div>
           )}
         </div>
       </div>
+
+      {/* Order form */}
+      {showOrderForm && (
+        <div className="mt-8 bg-white border rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-6">
+            Place Your Order
+          </h3>
+
+          {orderError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-4 text-sm">
+              {orderError}
+            </div>
+          )}
+
+          <form onSubmit={handleOrder} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Delivery District
+              </label>
+              <input
+                type="text"
+                value={orderData.district}
+                onChange={(e) =>
+                  setOrderData({ ...orderData, district: e.target.value })
+                }
+                placeholder="Your district"
+                required
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Address
+              </label>
+              <input
+                type="text"
+                value={orderData.details}
+                onChange={(e) =>
+                  setOrderData({ ...orderData, details: e.target.value })
+                }
+                placeholder="Village, Upazila, detailed address"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Note to Seller
+              </label>
+              <textarea
+                value={orderData.note}
+                onChange={(e) =>
+                  setOrderData({ ...orderData, note: e.target.value })
+                }
+                placeholder="Any special instructions..."
+                rows={3}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
+              <span className="text-gray-600">Total Amount</span>
+              <span className="text-2xl font-bold text-green-700">
+                ৳{cow.price?.toLocaleString()}
+              </span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={ordering}
+              className="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 disabled:bg-green-400 transition font-semibold"
+            >
+              {ordering ? "Placing Order..." : "Confirm Order"}
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

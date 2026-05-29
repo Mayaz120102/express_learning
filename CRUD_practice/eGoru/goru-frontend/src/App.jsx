@@ -13,6 +13,7 @@ import GoruCowList from "./pages/GoruCowList";
 import GoruCowDetail from "./pages/GoruCowDetail";
 import GoruAddCow from "./pages/GoruAddCow";
 import GoruEditCow from "./pages/GoruEditCow";
+import GoruMyOrders from "./pages/GoruMyOrders";
 import GoruNotFound from "./pages/GoruNotFound";
 
 const App = () => {
@@ -21,11 +22,13 @@ const App = () => {
       <GoruAuthProvider>
         <GoruLayout>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<GoruHome />} />
             <Route path="/about" element={<GoruAbout />} />
             <Route path="/cows" element={<GoruCowList />} />
             <Route path="/cows/:id" element={<GoruCowDetail />} />
 
+            {/* Auth routes — redirect if already logged in */}
             <Route
               path="/login"
               element={
@@ -43,6 +46,7 @@ const App = () => {
               }
             />
 
+            {/* Seller only */}
             <Route
               path="/dashboard"
               element={
@@ -68,6 +72,17 @@ const App = () => {
               }
             />
 
+            {/* Buyer only */}
+            <Route
+              path="/my-orders"
+              element={
+                <GoruProtectedRoute allowedRoles={["buyer"]}>
+                  <GoruMyOrders />
+                </GoruProtectedRoute>
+              }
+            />
+
+            {/* 404 */}
             <Route path="*" element={<GoruNotFound />} />
           </Routes>
         </GoruLayout>

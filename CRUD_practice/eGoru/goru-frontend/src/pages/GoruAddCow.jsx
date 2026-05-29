@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import goruAxios from "../api/goruAxios";
+import GoruImageUpload from "../components/GoruImageUpload";
 
 const GoruAddCow = () => {
   const navigate = useNavigate();
@@ -15,8 +16,13 @@ const GoruAddCow = () => {
     price: "",
     district: "",
     description: "",
+    images: [],
   });
 
+  // handler
+  const handleImagesUploaded = (urls) => {
+    setFormData({ ...formData, images: urls });
+  };
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -157,7 +163,10 @@ const GoruAddCow = () => {
             className={inputClass}
           />
         </div>
-
+        <GoruImageUpload
+          onUploadComplete={handleImagesUploaded}
+          existingImages={formData.images}
+        />
         <div className="flex gap-4 pt-2">
           <button
             type="button"

@@ -29,15 +29,76 @@ export const goruCreateCow = async (req, res) => {
 };
 
 // ─── GET ALL COWS ─────────────────────────────────────────────────
+// ─── GET ALL COWS (with search, filter, sort, pagination) ─────────
 export const goruGetAllCows = async (req, res) => {
   try {
-    const cows = await GoruCow.find({ isAvailable: true })
-      .populate("seller", "name phone district") // only these fields from seller
-      .sort({ createdAt: -1 }); // newest first
+    const {
+      search,
+      district,
+      breed,
+      minPrice,
+      maxPrice,
+      sort,
+      page = 1,
+      limit = 9,
+    } = req.query;
+
+    // Build the filter object dynamically
+    const filter = { isAvailable: true };
+
+    // Search by title, breed, or description (uses text index we created)
+    if (search) {
+      filter.$text = { $search: search };
+    }
+
+    // Filter by district (case-insensitive)
+    if (district) {
+      filter.district = { $regex: district, $options: "i" };
+    }
+
+    // Filter by breed (case-insensitive)
+    if (breed) {
+      filter.breed = { $regex: breed, $options: "i" };
+    }
+
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Sort options
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      price_low: { price: 1 },
+      price_high: { price: -1 },
+      weight_high: { weight: -1 },
+    };
+    const sortBy = sortOptions[sort] || sortOptions.newest;
+
+    // Pagination math
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(20, Math.max(1, Number(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Run both queries in parallel — faster than sequential
+    const [cows, total] = await Promise.all([
+      GoruCow.find(filter)
+        .populate("seller", "name phone district")
+        .sort(sortBy)
+        .skip(skip)
+        .limit(limitNum),
+      GoruCow.countDocuments(filter),
+    ]);
 
     res.status(200).json({
       success: true,
       count: cows.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
       cows,
     });
   } catch (error) {
