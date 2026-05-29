@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import goruAxios from "../api/goruAxios";
 
 const STATUS_STYLES = {
@@ -23,20 +24,25 @@ const GoruMyOrders = () => {
         setLoading(false);
       }
     };
+
     fetch();
   }, []);
 
   const handleCancel = async (orderId) => {
     if (!window.confirm("Cancel this order?")) return;
+
     try {
       await goruAxios.patch(`/orders/${orderId}/cancel`);
+
       setOrders(
         orders.map((o) =>
           o._id === orderId ? { ...o, status: "cancelled" } : o,
         ),
       );
+
+      toast.success("Order cancelled");
     } catch (err) {
-      alert(err.response?.data?.message || "Cancel failed");
+      toast.error(err.response?.data?.message || "Cancel failed");
     }
   };
 
@@ -76,16 +82,20 @@ const GoruMyOrders = () => {
                       </div>
                     )}
                   </div>
+
                   <div>
                     <h3 className="font-bold text-gray-800">
                       {order.cow?.title}
                     </h3>
+
                     <p className="text-gray-500 text-sm">
                       {order.cow?.breed} · {order.cow?.district}
                     </p>
+
                     <p className="text-green-700 font-bold mt-1">
                       ৳{order.totalPrice?.toLocaleString()}
                     </p>
+
                     <p className="text-gray-400 text-xs mt-1">
                       Seller: {order.seller?.name}
                     </p>
@@ -95,14 +105,18 @@ const GoruMyOrders = () => {
                 {/* Status + action */}
                 <div className="text-right space-y-2">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status]}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      STATUS_STYLES[order.status]
+                    }`}
                   >
                     {order.status.charAt(0).toUpperCase() +
                       order.status.slice(1)}
                   </span>
+
                   <p className="text-gray-400 text-xs">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </p>
+
                   {order.status === "pending" && (
                     <button
                       onClick={() => handleCancel(order._id)}
@@ -117,11 +131,13 @@ const GoruMyOrders = () => {
               {/* Delivery info */}
               <div className="mt-4 pt-4 border-t text-sm text-gray-600">
                 <span>📍 {order.deliveryAddress?.district}</span>
+
                 {order.deliveryAddress?.details && (
                   <span className="ml-4">
                     — {order.deliveryAddress.details}
                   </span>
                 )}
+
                 {order.note && (
                   <p className="mt-1 text-gray-400">Note: {order.note}</p>
                 )}

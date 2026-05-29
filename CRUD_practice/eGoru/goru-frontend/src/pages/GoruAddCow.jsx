@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import goruAxios from "../api/goruAxios";
 import GoruImageUpload from "../components/GoruImageUpload";
+import toast from "react-hot-toast";
 
 const GoruAddCow = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -23,20 +24,26 @@ const GoruAddCow = () => {
   const handleImagesUploaded = (urls) => {
     setFormData({ ...formData, images: urls });
   };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
       const { data } = await goruAxios.post("/cows", formData);
+
+      toast.success("Cow listed successfully!");
+
       navigate(`/cows/${data.cow._id}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create listing");
+      toast.error(err.response?.data?.message || "Failed to create listing");
     } finally {
       setLoading(false);
     }
@@ -49,12 +56,6 @@ const GoruAddCow = () => {
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold text-green-700 mb-8">List Your Cow</h1>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-6 text-sm">
-          {error}
-        </div>
-      )}
-
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-md p-8 space-y-5"
@@ -63,6 +64,7 @@ const GoruAddCow = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Title
           </label>
+
           <input
             name="title"
             value={formData.title}
@@ -78,6 +80,7 @@ const GoruAddCow = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Breed
             </label>
+
             <input
               name="breed"
               value={formData.breed}
@@ -87,10 +90,12 @@ const GoruAddCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               District
             </label>
+
             <input
               name="district"
               value={formData.district}
@@ -107,6 +112,7 @@ const GoruAddCow = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Age (years)
             </label>
+
             <input
               type="number"
               name="age"
@@ -118,10 +124,12 @@ const GoruAddCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Weight (kg)
             </label>
+
             <input
               type="number"
               name="weight"
@@ -133,10 +141,12 @@ const GoruAddCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Price (৳)
             </label>
+
             <input
               type="number"
               name="price"
@@ -154,6 +164,7 @@ const GoruAddCow = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Description
           </label>
+
           <textarea
             name="description"
             value={formData.description}
@@ -163,10 +174,12 @@ const GoruAddCow = () => {
             className={inputClass}
           />
         </div>
+
         <GoruImageUpload
           onUploadComplete={handleImagesUploaded}
           existingImages={formData.images}
         />
+
         <div className="flex gap-4 pt-2">
           <button
             type="button"
@@ -175,6 +188,7 @@ const GoruAddCow = () => {
           >
             Cancel
           </button>
+
           <button
             type="submit"
             disabled={loading}

@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import goruAxios from "../api/goruAxios";
 import GoruImageUpload from "../components/GoruImageUpload";
+import toast from "react-hot-toast";
 
 const GoruEditCow = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -25,7 +26,9 @@ const GoruEditCow = () => {
     const fetchCow = async () => {
       try {
         const { data } = await goruAxios.get(`/cows/${id}`);
+
         const c = data.cow;
+
         setFormData({
           title: c.title,
           breed: c.breed,
@@ -37,28 +40,40 @@ const GoruEditCow = () => {
           images: c.images || [],
         });
       } catch {
-        setError("Failed to load cow data");
+        toast.error("Failed to load cow data");
       }
     };
+
     fetchCow();
   }, [id]);
 
   const handleImagesUploaded = (urls) => {
-    setFormData((prev) => ({ ...prev, images: urls }));
+    setFormData((prev) => ({
+      ...prev,
+      images: urls,
+    }));
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
+
     try {
       await goruAxios.put(`/cows/${id}`, formData);
+
+      toast.success("Listing updated!");
+
       navigate(`/cows/${id}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Update failed");
+      toast.error(err.response?.data?.message || "Update failed");
     } finally {
       setLoading(false);
     }
@@ -71,12 +86,6 @@ const GoruEditCow = () => {
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold text-green-700 mb-8">Edit Listing</h1>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-6 text-sm">
-          {error}
-        </div>
-      )}
-
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-md p-8 space-y-5"
@@ -85,6 +94,7 @@ const GoruEditCow = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Title
           </label>
+
           <input
             name="title"
             value={formData.title}
@@ -99,6 +109,7 @@ const GoruEditCow = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Breed
             </label>
+
             <input
               name="breed"
               value={formData.breed}
@@ -107,10 +118,12 @@ const GoruEditCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               District
             </label>
+
             <input
               name="district"
               value={formData.district}
@@ -126,6 +139,7 @@ const GoruEditCow = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Age (years)
             </label>
+
             <input
               type="number"
               name="age"
@@ -135,10 +149,12 @@ const GoruEditCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Weight (kg)
             </label>
+
             <input
               type="number"
               name="weight"
@@ -148,10 +164,12 @@ const GoruEditCow = () => {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Price (৳)
             </label>
+
             <input
               type="number"
               name="price"
@@ -167,6 +185,7 @@ const GoruEditCow = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Description
           </label>
+
           <textarea
             name="description"
             value={formData.description}
@@ -175,6 +194,7 @@ const GoruEditCow = () => {
             className={inputClass}
           />
         </div>
+
         <GoruImageUpload
           onUploadComplete={handleImagesUploaded}
           existingImages={formData.images}
@@ -188,6 +208,7 @@ const GoruEditCow = () => {
           >
             Cancel
           </button>
+
           <button
             type="submit"
             disabled={loading}

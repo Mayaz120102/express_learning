@@ -3,6 +3,7 @@ import { GoruAuthProvider } from "./context/GoruAuthContext";
 import GoruLayout from "./components/layout/GoruLayout";
 import GoruProtectedRoute from "./components/GoruProtectedRoute";
 import GoruPublicRoute from "./components/GoruPublicRoute";
+import { Toaster } from "react-hot-toast";
 
 import GoruHome from "./pages/GoruHome";
 import GoruAbout from "./pages/About";
@@ -20,6 +21,22 @@ const App = () => {
   return (
     <BrowserRouter>
       <GoruAuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              borderRadius: "10px",
+              fontFamily: "inherit",
+            },
+            success: {
+              iconTheme: {
+                primary: "#15803d",
+                secondary: "#fff",
+              },
+            },
+          }}
+        />
         <GoruLayout>
           <Routes>
             {/* Public routes */}

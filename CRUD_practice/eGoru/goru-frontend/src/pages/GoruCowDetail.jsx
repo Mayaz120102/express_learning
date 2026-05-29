@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import goruAxios from "../api/goruAxios";
 import userGoruAuth from "../hooks/userGoruAuth";
 
 const GoruCowDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { goruUser, isAuthenticated } = userGoruAuth();
+  const { goruUser } = userGoruAuth();
 
   const [cow, setCow] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,8 +20,8 @@ const GoruCowDetail = () => {
     details: "",
     note: "",
   });
+
   const [ordering, setOrdering] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderError, setOrderError] = useState("");
 
   useEffect(() => {
@@ -34,21 +35,29 @@ const GoruCowDetail = () => {
         setLoading(false);
       }
     };
+
     fetchCow();
   }, [id]);
 
+  // Delete listing
   const handleDelete = async () => {
     if (!window.confirm("Delete this listing?")) return;
+
     try {
       await goruAxios.delete(`/cows/${id}`);
+
+      toast.success("Listing deleted");
+
       navigate("/cows");
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      toast.error(err.response?.data?.message || "Delete failed");
     }
   };
 
+  // Place order
   const handleOrder = async (e) => {
     e.preventDefault();
+
     setOrdering(true);
     setOrderError("");
 
@@ -61,19 +70,49 @@ const GoruCowDetail = () => {
         },
         note: orderData.note,
       });
-      setOrderSuccess(true);
+
+      toast.success("Order placed successfully!");
+
       setShowOrderForm(false);
+
+      navigate("/my-orders");
     } catch (err) {
-      setOrderError(err.response?.data?.message || "Order failed");
+      const message = err.response?.data?.message || "Order failed";
+
+      setOrderError(message);
+
+      toast.error(message);
     } finally {
       setOrdering(false);
     }
   };
 
+  // Skeleton loading UI
   if (loading)
     return (
-      <div className="flex justify-center py-20">
-        <div className="text-green-700 animate-pulse text-lg">Loading...</div>
+      <div className="max-w-4xl mx-auto animate-pulse">
+        {/* Image skeleton */}
+        <div className="bg-gray-200 rounded-2xl h-80 mb-8" />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4" />
+
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 rounded-xl" />
+              ))}
+            </div>
+
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-5/6" />
+          </div>
+
+          <div className="space-y-4">
+            <div className="h-32 bg-gray-200 rounded-2xl" />
+            <div className="h-40 bg-gray-200 rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
 
@@ -103,6 +142,7 @@ const GoruCowDetail = () => {
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <h1 className="text-3xl font-bold text-gray-800">{cow.title}</h1>
+
             <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
               {cow.breed}
             </span>
@@ -110,9 +150,21 @@ const GoruCowDetail = () => {
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             {[
-              { label: "Age", value: `${cow.age} years`, icon: "🎂" },
-              { label: "Weight", value: `${cow.weight} kg`, icon: "⚖️" },
-              { label: "District", value: cow.district, icon: "📍" },
+              {
+                label: "Age",
+                value: `${cow.age} years`,
+                icon: "🎂",
+              },
+              {
+                label: "Weight",
+                value: `${cow.weight} kg`,
+                icon: "⚖️",
+              },
+              {
+                label: "District",
+                value: cow.district,
+                icon: "📍",
+              },
               {
                 label: "Status",
                 value: cow.isAvailable ? "Available" : "Sold",
@@ -123,6 +175,7 @@ const GoruCowDetail = () => {
                 <p className="text-gray-500 text-sm">
                   {icon} {label}
                 </p>
+
                 <p className="font-semibold text-gray-800 mt-1">{value}</p>
               </div>
             ))}
@@ -131,6 +184,7 @@ const GoruCowDetail = () => {
           {cow.description && (
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Description</h3>
+
               <p className="text-gray-600 leading-relaxed">{cow.description}</p>
             </div>
           )}
@@ -141,12 +195,14 @@ const GoruCowDetail = () => {
           {/* Price */}
           <div className="bg-green-700 text-white rounded-2xl p-6 text-center">
             <p className="text-green-200 text-sm mb-1">Price</p>
+
             <p className="text-4xl font-bold">৳{cow.price?.toLocaleString()}</p>
           </div>
 
           {/* Seller info */}
           <div className="bg-white border rounded-2xl p-5">
             <h3 className="font-semibold text-gray-700 mb-3">Seller Info</h3>
+
             <div className="space-y-2 text-sm">
               <p>👤 {cow.seller?.name}</p>
               <p>📍 {cow.seller?.district}</p>
@@ -163,6 +219,7 @@ const GoruCowDetail = () => {
               >
                 Edit Listing
               </button>
+
               <button
                 onClick={handleDelete}
                 className="w-full bg-red-500 text-white py-2.5 rounded-lg hover:bg-red-600 transition font-medium"
@@ -172,15 +229,8 @@ const GoruCowDetail = () => {
             </div>
           )}
 
-          {/* Order success */}
-          {orderSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm text-center">
-              ✅ Order placed! Check your orders page.
-            </div>
-          )}
-
           {/* Buyer actions */}
-          {isBuyer && cow.isAvailable && !orderSuccess && (
+          {isBuyer && cow.isAvailable && (
             <button
               onClick={() => setShowOrderForm(!showOrderForm)}
               className="w-full bg-green-700 text-white py-3 rounded-lg hover:bg-green-800 transition font-semibold"
@@ -189,6 +239,7 @@ const GoruCowDetail = () => {
             </button>
           )}
 
+          {/* Sold state */}
           {!cow.isAvailable && (
             <div className="bg-gray-100 text-gray-500 rounded-xl p-4 text-center text-sm font-medium">
               This cow has been sold
@@ -215,11 +266,15 @@ const GoruCowDetail = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Delivery District
               </label>
+
               <input
                 type="text"
                 value={orderData.district}
                 onChange={(e) =>
-                  setOrderData({ ...orderData, district: e.target.value })
+                  setOrderData({
+                    ...orderData,
+                    district: e.target.value,
+                  })
                 }
                 placeholder="Your district"
                 required
@@ -231,11 +286,15 @@ const GoruCowDetail = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Address
               </label>
+
               <input
                 type="text"
                 value={orderData.details}
                 onChange={(e) =>
-                  setOrderData({ ...orderData, details: e.target.value })
+                  setOrderData({
+                    ...orderData,
+                    details: e.target.value,
+                  })
                 }
                 placeholder="Village, Upazila, detailed address"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -246,10 +305,14 @@ const GoruCowDetail = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Note to Seller
               </label>
+
               <textarea
                 value={orderData.note}
                 onChange={(e) =>
-                  setOrderData({ ...orderData, note: e.target.value })
+                  setOrderData({
+                    ...orderData,
+                    note: e.target.value,
+                  })
                 }
                 placeholder="Any special instructions..."
                 rows={3}
@@ -259,6 +322,7 @@ const GoruCowDetail = () => {
 
             <div className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
               <span className="text-gray-600">Total Amount</span>
+
               <span className="text-2xl font-bold text-green-700">
                 ৳{cow.price?.toLocaleString()}
               </span>

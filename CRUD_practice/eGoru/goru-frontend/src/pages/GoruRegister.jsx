@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import userGoruAuth from "../hooks/userGoruAuth";
 import goruAxios from "../api/goruAxios";
+import toast from "react-hot-toast";
 
 const GoruRegister = () => {
   const navigate = useNavigate();
   const { goruLogin } = userGoruAuth();
 
-  // Single state object for all form fields — cleaner than 6 separate useState
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,34 +17,30 @@ const GoruRegister = () => {
     district: "",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // One handler for ALL inputs — reads the field name from the element
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // stop page reload
-    setError("");
+    e.preventDefault();
     setLoading(true);
 
     try {
       const { data } = await goruAxios.post("/auth/register", formData);
 
-      // Save user + token to context and localStorage
       goruLogin(data.user, data.token);
 
-      // Redirect based on role
-      if (data.user.role === "seller") {
-        navigate("/dashboard");
-      } else {
-        navigate("/");
-      }
+      toast.success(`Welcome to E-Goru, ${data.user.name}!`);
+
+      navigate(data.user.role === "seller" ? "/dashboard" : "/");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -59,19 +55,13 @@ const GoruRegister = () => {
           <p className="text-gray-500 mt-2">Create your account</p>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-6 text-sm">
-            {error}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
             </label>
+
             <input
               type="text"
               name="name"
@@ -88,6 +78,7 @@ const GoruRegister = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
             </label>
+
             <input
               type="email"
               name="email"
@@ -104,6 +95,7 @@ const GoruRegister = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
+
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -112,8 +104,9 @@ const GoruRegister = () => {
                 onChange={handleChange}
                 placeholder="Minimum 6 characters"
                 required
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-12"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -129,6 +122,7 @@ const GoruRegister = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               I want to
             </label>
+
             <select
               name="role"
               value={formData.role}
@@ -140,12 +134,13 @@ const GoruRegister = () => {
             </select>
           </div>
 
-          {/* Phone + District side by side */}
+          {/* Phone + District */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone
               </label>
+
               <input
                 type="text"
                 name="phone"
@@ -155,10 +150,12 @@ const GoruRegister = () => {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 District
               </label>
+
               <input
                 type="text"
                 name="district"
@@ -180,7 +177,6 @@ const GoruRegister = () => {
           </button>
         </form>
 
-        {/* Login link */}
         <p className="text-center text-gray-500 text-sm mt-6">
           Already have an account?{" "}
           <Link
