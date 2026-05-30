@@ -1,14 +1,13 @@
+import "./src/config/goruEnv.js";
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import connectGoruDB from "./src/config/goruDB.js";
 import goruAuthRoutes from "./src/routes/goruAuthRoutes.js";
 import goruCowRoutes from "./src/routes/goruCowRoutes.js";
 import goruUploadRoutes from "./src/routes/goruUploadRoutes.js";
 import goruOrderRoutes from "./src/routes/goruOrderRoutes.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
