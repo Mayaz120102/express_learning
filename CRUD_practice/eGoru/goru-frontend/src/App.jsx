@@ -9,7 +9,7 @@ import GoruHome from "./pages/GoruHome";
 import GoruAbout from "./pages/About";
 import GoruLogin from "./pages/GoruLogin";
 import GoruRegister from "./pages/GoruRegister";
-import GoruDashboard from "./pages/GoruDashboard";
+import GoruDashboard from "./pages/GoruDashBoard";
 import GoruCowList from "./pages/GoruCowList";
 import GoruCowDetail from "./pages/GoruCowDetail";
 import GoruAddCow from "./pages/GoruAddCow";
