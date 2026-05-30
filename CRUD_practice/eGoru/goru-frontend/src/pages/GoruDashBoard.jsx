@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import userGoruAuth from "../hooks/userGoruAuth";
 import goruAxios from "../api/goruAxios";
+import toast from "react-hot-toast";
 
 // ─── STATUS STYLES ────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -18,15 +19,12 @@ const GoruDashboard = () => {
 
   const [activeTab, setActiveTab] = useState("listings");
 
-  // Listings state
   const [cows, setCows] = useState([]);
   const [listingsLoading, setListingsLoading] = useState(true);
 
-  // Orders state
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  // Fetch seller's own cow listings
   useEffect(() => {
     const fetchMyCows = async () => {
       try {
@@ -41,7 +39,6 @@ const GoruDashboard = () => {
     fetchMyCows();
   }, []);
 
-  // Fetch seller's incoming orders
   const fetchSellerOrders = async () => {
     setOrdersLoading(true);
     try {
@@ -59,52 +56,59 @@ const GoruDashboard = () => {
     try {
       await goruAxios.delete(`/cows/${id}`);
       setCows(cows.filter((c) => c._id !== id));
+      toast.success("Listing deleted");
     } catch {
-      alert("Delete failed");
+      toast.error("Delete failed");
     }
   };
 
   return (
-    <div className="py-6">
+    <div className="py-4 md:py-6">
       {/* ── HEADER ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-green-700">My Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome back, {goruUser?.name}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-green-700">
+            My Dashboard
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm md:text-base">
+            Welcome back, {goruUser?.name}
+          </p>
         </div>
         <Link
           to="/cows/add"
-          className="bg-green-700 text-white px-5 py-2.5 rounded-lg hover:bg-green-800 transition font-semibold"
+          className="bg-green-700 text-white px-4 py-2.5 rounded-lg hover:bg-green-800 transition font-semibold text-sm md:text-base text-center"
         >
           + List New Cow
         </Link>
       </div>
 
       {/* ── STATS ── */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-700">{cows.length}</p>
-          <p className="text-gray-500 text-sm mt-1">Total Listings</p>
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow p-3 md:p-5 text-center">
+          <p className="text-2xl md:text-3xl font-bold text-green-700">
+            {cows.length}
+          </p>
+          <p className="text-gray-500 text-xs md:text-sm mt-1">Total</p>
         </div>
-        <div className="bg-white rounded-xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-700">
+        <div className="bg-white rounded-xl shadow p-3 md:p-5 text-center">
+          <p className="text-2xl md:text-3xl font-bold text-green-700">
             {cows.filter((c) => c.isAvailable).length}
           </p>
-          <p className="text-gray-500 text-sm mt-1">Available</p>
+          <p className="text-gray-500 text-xs md:text-sm mt-1">Available</p>
         </div>
-        <div className="bg-white rounded-xl shadow p-5 text-center">
-          <p className="text-3xl font-bold text-green-700">
+        <div className="bg-white rounded-xl shadow p-3 md:p-5 text-center">
+          <p className="text-2xl md:text-3xl font-bold text-green-700">
             {cows.filter((c) => !c.isAvailable).length}
           </p>
-          <p className="text-gray-500 text-sm mt-1">Sold</p>
+          <p className="text-gray-500 text-xs md:text-sm mt-1">Sold</p>
         </div>
       </div>
 
       {/* ── TABS ── */}
-      <div className="flex gap-2 mb-8 border-b">
+      <div className="flex gap-2 mb-6 border-b overflow-x-auto">
         <button
           onClick={() => setActiveTab("listings")}
-          className={`px-6 py-3 font-medium text-sm transition border-b-2 -mb-px ${
+          className={`px-4 md:px-6 py-3 font-medium text-sm whitespace-nowrap transition border-b-2 -mb-px ${
             activeTab === "listings"
               ? "border-green-700 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-700"
@@ -117,7 +121,7 @@ const GoruDashboard = () => {
             setActiveTab("orders");
             fetchSellerOrders();
           }}
-          className={`px-6 py-3 font-medium text-sm transition border-b-2 -mb-px ${
+          className={`px-4 md:px-6 py-3 font-medium text-sm whitespace-nowrap transition border-b-2 -mb-px ${
             activeTab === "orders"
               ? "border-green-700 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-700"
@@ -135,7 +139,7 @@ const GoruDashboard = () => {
               Loading...
             </div>
           ) : cows.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl shadow">
+            <div className="text-center py-16 bg-white rounded-2xl shadow px-4">
               <div className="text-6xl mb-4">🐄</div>
               <p className="text-gray-500 mb-4">No listings yet</p>
               <Link
@@ -146,59 +150,126 @@ const GoruDashboard = () => {
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-                  <tr>
-                    <th className="px-6 py-4 text-left">Title</th>
-                    <th className="px-6 py-4 text-left">Breed</th>
-                    <th className="px-6 py-4 text-left">Price</th>
-                    <th className="px-6 py-4 text-left">Status</th>
-                    <th className="px-6 py-4 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {cows.map((cow) => (
-                    <tr key={cow._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium text-gray-800">
-                        {cow.title}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">{cow.breed}</td>
-                      <td className="px-6 py-4 font-semibold text-green-700">
-                        ৳{cow.price?.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            cow.isAvailable
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {cow.isAvailable ? "Available" : "Sold"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => navigate(`/cows/${cow._id}/edit`)}
-                            className="text-blue-600 hover:underline text-xs font-medium"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(cow._id)}
-                            className="text-red-500 hover:underline text-xs font-medium"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden md:block bg-white rounded-2xl shadow overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                    <tr>
+                      <th className="px-6 py-4 text-left">Title</th>
+                      <th className="px-6 py-4 text-left">Breed</th>
+                      <th className="px-6 py-4 text-left">Price</th>
+                      <th className="px-6 py-4 text-left">Status</th>
+                      <th className="px-6 py-4 text-left">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {cows.map((cow) => (
+                      <tr key={cow._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 font-medium text-gray-800">
+                          {cow.title}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">{cow.breed}</td>
+                        <td className="px-6 py-4 font-semibold text-green-700">
+                          ৳{cow.price?.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              cow.isAvailable
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            {cow.isAvailable ? "Available" : "Sold"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => navigate(`/cows/${cow._id}/edit`)}
+                              className="text-blue-600 hover:underline text-xs font-medium"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(cow._id)}
+                              className="text-red-500 hover:underline text-xs font-medium"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards — shown only on mobile */}
+              <div className="md:hidden space-y-3">
+                {cows.map((cow) => (
+                  <div key={cow._id} className="bg-white rounded-xl shadow p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex gap-3 items-center">
+                        {/* Cow image or emoji */}
+                        <div className="w-14 h-14 bg-green-50 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                          {cow.images?.[0] ? (
+                            <img
+                              src={cow.images[0]}
+                              alt={cow.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl">🐄</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800 text-sm">
+                            {cow.title}
+                          </p>
+                          <p className="text-gray-500 text-xs">{cow.breed}</p>
+                          <p className="text-green-700 font-bold text-sm mt-0.5">
+                            ৳{cow.price?.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${
+                          cow.isAvailable
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {cow.isAvailable ? "Available" : "Sold"}
+                      </span>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2 pt-3 border-t">
+                      <button
+                        onClick={() => navigate(`/cows/${cow._id}/edit`)}
+                        className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg text-xs font-medium hover:bg-blue-100 transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cow._id)}
+                        className="flex-1 bg-red-50 text-red-500 py-2 rounded-lg text-xs font-medium hover:bg-red-100 transition"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => navigate(`/cows/${cow._id}`)}
+                        className="flex-1 bg-gray-50 text-gray-600 py-2 rounded-lg text-xs font-medium hover:bg-gray-100 transition"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </>
       )}
@@ -223,8 +294,9 @@ const GoruSellerOrders = ({ orders, loading, onStatusUpdate }) => {
     try {
       await goruAxios.patch(`/orders/${orderId}/status`, { status });
       onStatusUpdate(orderId, status);
+      toast.success(`Order ${status}`);
     } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
+      toast.error(err.response?.data?.message || "Update failed");
     }
   };
 
@@ -246,11 +318,14 @@ const GoruSellerOrders = ({ orders, loading, onStatusUpdate }) => {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <div key={order._id} className="bg-white rounded-2xl shadow-md p-6">
-          <div className="flex items-start justify-between">
+        <div
+          key={order._id}
+          className="bg-white rounded-2xl shadow-md p-4 md:p-6"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             {/* Cow + buyer info */}
-            <div className="flex gap-4">
-              <div className="w-16 h-16 bg-green-50 rounded-xl overflow-hidden shrink-0">
+            <div className="flex gap-3 md:gap-4">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-green-50 rounded-xl overflow-hidden shrink-0">
                 {order.cow?.images?.[0] ? (
                   <img
                     src={order.cow.images[0]}
@@ -264,12 +339,15 @@ const GoruSellerOrders = ({ orders, loading, onStatusUpdate }) => {
                 )}
               </div>
               <div>
-                <h3 className="font-bold text-gray-800">{order.cow?.title}</h3>
-                <p className="text-green-700 font-bold">
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">
+                  {order.cow?.title}
+                </h3>
+                <p className="text-green-700 font-bold text-sm md:text-base">
                   ৳{order.totalPrice?.toLocaleString()}
                 </p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Buyer: {order.buyer?.name} · 📞 {order.buyer?.phone || "N/A"}
+                <p className="text-gray-500 text-xs md:text-sm mt-1">
+                  Buyer: {order.buyer?.name}
+                  {order.buyer?.phone && ` · 📞 ${order.buyer.phone}`}
                 </p>
                 <p className="text-gray-400 text-xs mt-1">
                   📍 {order.deliveryAddress?.district}
@@ -277,26 +355,26 @@ const GoruSellerOrders = ({ orders, loading, onStatusUpdate }) => {
                     ` — ${order.deliveryAddress.details}`}
                 </p>
                 {order.note && (
-                  <p className="text-gray-400 text-xs mt-1">
-                    Note: {order.note}
-                  </p>
+                  <p className="text-gray-400 text-xs mt-1">📝 {order.note}</p>
                 )}
               </div>
             </div>
 
             {/* Status + actions */}
-            <div className="text-right space-y-2 shrink-0">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status]}`}
-              >
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-              </span>
-              <p className="text-gray-400 text-xs">
-                {new Date(order.createdAt).toLocaleDateString()}
-              </p>
+            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0">
+              <div className="flex flex-col items-end gap-1">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[order.status]}`}
+                >
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </span>
+                <p className="text-gray-400 text-xs">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </p>
+              </div>
 
               {order.status === "pending" && (
-                <div className="flex gap-2 justify-end mt-2">
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleStatus(order._id, "confirmed")}
                     className="bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-green-800 transition font-medium"
