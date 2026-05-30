@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import connectGoruDB from "./src/config/goruDB.js";
 import goruAuthRoutes from "./src/routes/goruAuthRoutes.js";
 import goruCowRoutes from "./src/routes/goruCowRoutes.js";
@@ -12,6 +13,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Middleware
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -21,13 +23,16 @@ app.use(
 
 app.use(express.json());
 
-app.use("/api/auth", goruAuthRoutes);
-app.use("/api/cows", goruCowRoutes);
-app.use("/api/upload", goruUploadRoutes);
-app.use("/api/orders", goruOrderRoutes);
+// Root Route
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "🐄 E-Goru API is live!",
+  });
+});
 
-//test
-app.get("/api/heath", (req, res) => {
+// Health Check Route
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     message: "🐄 E-Goru server is running!",
@@ -35,6 +40,7 @@ app.get("/api/heath", (req, res) => {
   });
 });
 
+// Project Info Route
 app.get("/api/goru-info", (req, res) => {
   res.json({
     success: true,
@@ -45,13 +51,32 @@ app.get("/api/goru-info", (req, res) => {
   });
 });
 
-//start server
-const startGoruServer = async () => {
-  await connectGoruDB();
+// API Routes
+app.use("/api/auth", goruAuthRoutes);
+app.use("/api/cows", goruCowRoutes);
+app.use("/api/upload", goruUploadRoutes);
+app.use("/api/orders", goruOrderRoutes);
 
-  app.listen(PORT, () => {
-    console.log(`🚀 Goru server running on http://localhost:${PORT}`);
+// 404 Route Handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
   });
+});
+
+// Start Server
+const startGoruServer = async () => {
+  try {
+    await connectGoruDB();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Goru server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error.message);
+    process.exit(1);
+  }
 };
 
 startGoruServer();
